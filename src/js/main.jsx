@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import idx from 'idx';
+import Book from './components/book.jsx'
 
 class GoogleBooks extends React.Component{
     constructor(props){
@@ -8,10 +9,7 @@ class GoogleBooks extends React.Component{
         this.state = {
          bookSearched: "",
          responseLength: 0,
-         bookCover: [],
-         bookAuthor: [],
-         bookTitle: [],
-         bookPreview: [],
+         books: [],
          error: "no",
          startIndex: 0,
          pageNumber: 1,
@@ -25,50 +23,27 @@ class GoogleBooks extends React.Component{
         .then(resp=>{
             return resp.json();
         })
-
         .then(data => {
            console.log(data)
            if(data.totalItems != 0){
-                let itemsCount = data.items.length; 
-                let totalItems = data.totalItems;
-                let myBookCover = [];
-                let myBookAuthor = [];
-                let myBookTitle= [];
-                let volumeInfo = [];
-                let myBookPreview = [];
-        
-                const { items } = data;
-            
-                items.forEach(item => {
-                    const thumbnail = idx(item, _ => _.volumeInfo.imageLinks.thumbnail) || 'img/NoBookCover.png';
-                    const authors = idx(item, _ => _.volumeInfo.authors) || 'No Author Information Available';
-                    const title = idx(item, _ => _.volumeInfo.title) || 'No Title Information Available';
-                    const preview = idx(item, _ => _.volumeInfo.previewLink) || '';
-                    myBookCover.push(thumbnail);
-                    myBookAuthor.push(authors);
-                    myBookTitle.push(title);
-                    myBookPreview.push(preview);
-                });
-
+            let itemsCount = data.items.length; 
+            let totalItems = data.totalItems;
                 this.setState({
                     responseLength: itemsCount,
-                    bookCover: myBookCover,
-                    bookAuthor: myBookAuthor,
-                    bookTitle: myBookTitle,
-                    bookPreview: myBookPreview, 
+                    books: data.items,
                     error: "no",
                     totalItems: totalItems
                 })
            } else {
                this.setState({
-                   error: "yes"
+                   error: "yes",
+                   books: []
                })
            }
         }
     )       
 }
    
- 
     //get input on the searched book
     handleSearchChange = (e) => {
         this.setState({
@@ -87,7 +62,6 @@ class GoogleBooks extends React.Component{
         })
     }
     
-    
     handlePrev = () =>{
         if(this.state.startIndex > 1 && this.state.pageNumber > 1){
             this.setState({
@@ -102,7 +76,6 @@ class GoogleBooks extends React.Component{
             this.setState({
                 startIndex: this.state.startIndex + this.state.itemsPerPage,
                 pageNumber: this.state.pageNumber + 1, 
-                bookTitle: []
             })
         }
     }
@@ -115,25 +88,17 @@ class GoogleBooks extends React.Component{
   }
 
 
-
     render(){ 
         let error
         let volumeInfo = [];
         if(this.state.error != "no"){
-            error = <span className="message">Unfortunately this book cannot be found :(
-            </span>
+            error = <span className="message">Unfortunately this book cannot be found :(</span>
         } else {
-            this.state.bookTitle.forEach((e, i) => {
+            this.state.books.forEach((e, i) => {
                 volumeInfo.push(
-                 <div className="book-content">
-                     <div className="book-cover"><img src={this.state.bookCover[i]}/></div>
-                     <a href={this.state.bookPreview[i]}>Preview</a>  
-                     <div className="book-title">{this.state.bookTitle[i]}</div>    
-                     <div className="book-author">{this.state.bookAuthor[i]}</div>    
-                </div>
-            )
-         })
-
+                <Book book={e} key={i}></Book>
+                )
+            })
         }
 
         let buttonContainer
